@@ -65,11 +65,12 @@ app.listen(app.get('port'), function(){
 
 
 //Function to reformat the JSON
-function reformatJSON(item, index){
+function reformatJSON(item){
      var temp = {
-         link : item.link,
-         title : item.title,
-         thumbnail : item.thumbnailLink 
+         url : item.link,
+         snippet: item.snippet,
+         thumbnail : item.image.thumbnailLink,
+         context: item.image.contextLink
      }
      res_obj.push(temp);
  }
@@ -102,8 +103,8 @@ function saveToDb(query){
     });
 }
 
+//Function to return the recent search.
 function getRecentSearch(res){
-    
      MongoClient.connect(db_url, function(err, db){
        if(err){
            console.log(err);
@@ -113,7 +114,7 @@ function getRecentSearch(res){
        //Select the collection
         var recentSearchs = db.collection('recent_searches');
         
-        recentSearchs.find({},{_id: 0, term: 1, when: 1}).toArray(function(err, data){
+        recentSearchs.find({},{_id: 0, term: 1, when: 1}).sort({when: -1}).toArray(function(err, data){
             if(err) console.log(err);
             res.send(JSON.stringify(data));
         })
