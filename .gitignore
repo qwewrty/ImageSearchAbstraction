@@ -1,2 +1,9 @@
+#node_modules
 node_modules
+
+#Some trial function
 trial.js
+trial2.js
+
+#Environmental args
+.env
