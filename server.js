@@ -12,7 +12,7 @@ app.set('port', (process.env.PORT || 5000));
 app.use(express.static('.'));
 
 app.get("/", function(req, res) {
-    res.send('Index.html');
+    res.send('index.html');
 })
 
 app.get("/api/imagesearch", function(req, res){
