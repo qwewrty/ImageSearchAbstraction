@@ -6,11 +6,16 @@ var app = express();
 var res_obj=[];
 
 //For getting the port number.
-app.set('port', (process.env.PORT || 5000))
+app.set('port', (process.env.PORT || 5000));
 
+//requied to fetch static pages.
+app.use(express.static('.'));
+
+app.get("/", function(req, res) {
+    res.send('Index.html');
+})
 
 app.get("/api/imagesearch", function(req, res){
-    console.log("not here")
     getRecentSearch(res);
     //res.send(JSON.stringify(getRecentSearch()));
 })
