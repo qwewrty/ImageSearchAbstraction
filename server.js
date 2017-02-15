@@ -3,13 +3,16 @@ var db_url =  process.env.MLAB_URI;
 var request = require("request");
 var express = require("express");
 var app = express();
+var res_obj=[];
 
 //For getting the port number.
 app.set('port', (process.env.PORT || 5000))
 
 
-app.get("/api", function(req, res){
-    console.log(req.query.offset);
+app.get("/api/imagesearch", function(req, res){
+    console.log("not here")
+    getRecentSearch(res);
+    //res.send(JSON.stringify(getRecentSearch()));
 })
 
 //URL mapping for /api/imagesearch/:query?offset=10
@@ -17,6 +20,7 @@ app.get("/api/imagesearch/:query", function(req, res){
     
     //Constant part of API.
 	var api = "https://www.googleapis.com/customsearch/v1?imgSize=medium&searchType=image&key=AIzaSyCROKVCgZesSu6wGg5lrsrGGvnxtJfbSKE&cx=002431131552367704307:fgyfwrbhygs&q=";
+	
 	//Read the term to be searched.
 	var q = req.params.query;
 	
@@ -34,6 +38,7 @@ app.get("/api/imagesearch/:query", function(req, res){
 	var url = api+q+"&start="+ offset;
 	//console.log(url);
 	
+	//Save the search in db
 	saveToDb(q);
 	
 	//Get the response JSON
@@ -43,7 +48,11 @@ app.get("/api/imagesearch/:query", function(req, res){
     }, function (error, response, body) {
     
         if (!error && response.statusCode === 200) {
-            res.send(JSON.stringify(body.items)) // Print the json response
+            
+            //Reformat the JSON
+            body.items.forEach(reformatJSON);
+ 
+            res.send(JSON.stringify(res_obj)) // Print the reformatted json response
         }
     })
 	
@@ -55,6 +64,17 @@ app.listen(app.get('port'), function(){
 });
 
 
+//Function to reformat the JSON
+function reformatJSON(item, index){
+     var temp = {
+         link : item.link,
+         title : item.title,
+         thumbnail : item.thumbnailLink 
+     }
+     res_obj.push(temp);
+ }
+
+//Function to save recent searches in db.
 function saveToDb(query){
     MongoClient.connect(db_url, function(err, db){
        if(err){
@@ -80,4 +100,24 @@ function saveToDb(query){
 
         db.close();
     });
+}
+
+function getRecentSearch(res){
+    
+     MongoClient.connect(db_url, function(err, db){
+       if(err){
+           console.log(err);
+           return;
+       }
+       
+       //Select the collection
+        var recentSearchs = db.collection('recent_searches');
+        
+        recentSearchs.find({},{_id: 0, term: 1, when: 1}).toArray(function(err, data){
+            if(err) console.log(err);
+            res.send(JSON.stringify(data));
+        })
+       
+       db.close();
+     });
 }
